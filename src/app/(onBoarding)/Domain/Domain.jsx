@@ -5,9 +5,9 @@ import { useRouter } from "next/navigation";
 import SelectableCard from "@/components/SelectableCard";
 import Button from "@/components/Button";
 
-export default function FieldClient({ fields = [] }) {
-  // ✅ اگر props نیاد، fields پیش‌فرض آرایه‌ی خالی است
-  const list = Array.isArray(fields) ? fields : []; // ✅ محافظ دوم
+export default function DomainClient({ domain = [] }) {
+  // ✅ اگر props نیاد، domain پیش‌فرض آرایه‌ی خالی است
+  const list = Array.isArray(domain) ? domain : []; // ✅ محافظ دوم
 
   const [selected, setSelected] = useState(new Set());
   const [submitting, setSubmitting] = useState(false);
@@ -31,7 +31,7 @@ export default function FieldClient({ fields = [] }) {
     setSubmitting(true);
     try {
       const payload = { selected: Array.from(selected) };
-      const res = await fetch("/api/fields/save", {
+      const res = await fetch("/api/domain/save", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),

@@ -12,9 +12,7 @@ export default function ForgotPasswordOTPPage({ searchParams }) {
           کد تایید رو وارد کن
         </h1>
         <p className="text-center text-sm mb-6 mt-6">
-          کد تایید برای شماره{" "}
-          <span dir="ltr" className="font-medium text-[#141414]">{phone}</span>{" "}
-          پیامک شد
+          کد تایید برای شماره <span dir="ltr" className="font-medium text-[#141414]">{phone}</span> پیامک شد
         </p>
 
         <OTPClient phone={phone} flow="forgot-password" />
@@ -22,3 +20,5 @@ export default function ForgotPasswordOTPPage({ searchParams }) {
     </div>
   );
 }
+
+// export { default } from "../otp/page";

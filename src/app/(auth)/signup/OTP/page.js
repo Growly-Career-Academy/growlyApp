@@ -4,9 +4,8 @@ export const metadata = { title: "کد تایید | Growly" };
 
 export default function Page({ searchParams }) {
   const phone = searchParams?.phone || "";
-  const flow = searchParams?.flow || "signup"; // signup یا forgot-password
+  const flow = searchParams?.flow || "signup";
 
-  // تعیین عنوان و متن بر اساس نوع فلو
   const getFlowContent = () => {
     if (flow === "forgot-password") {
       return {
@@ -15,7 +14,7 @@ export default function Page({ searchParams }) {
       };
     }
     return {
-      title: "کد تایید رو وارد کن", 
+      title: "کد تایید رو وارد کن",
       description: `کد تایید برای شماره ${phone} پیامک شد`
     };
   };
@@ -37,3 +36,5 @@ export default function Page({ searchParams }) {
     </div>
   );
 }
+
+// export { default } from "../otp/page";

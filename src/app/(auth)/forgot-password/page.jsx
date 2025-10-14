@@ -2,10 +2,10 @@
 
 import { useRouter, useSearchParams } from "next/navigation";
 import { useState, useMemo } from "react";
-import Button from "../../../components/Button";
-import Input from "../../../components/inputs/Input";
-import PassInput from "../../../components/inputs/PassInput";
-import NumInput from "../../../components/inputs/NumInput";
+import Button from "@/components/Button";
+import Input from "@/components/inputs/Input";
+import PassInput from "@/components/inputs/PassInput";
+import NumInput from "@/components/inputs/NumInput";
 
 export default function ForgotPasswordPage() {
   const router = useRouter();
@@ -24,7 +24,7 @@ export default function ForgotPasswordPage() {
     if (!phone) return;
     const normalized = phone.replace(/\D/g, "");
     // بعد از وارد کردن شماره، به صفحه OTP می‌رویم
-    router.push(`/forgot-password/OTP?phone=${encodeURIComponent(normalized)}`);
+    router.push(`/forgot-password/otp?phone=${encodeURIComponent(normalized)}`);
   }
 
   function handlePasswordSubmit(e) {
@@ -35,7 +35,7 @@ export default function ForgotPasswordPage() {
     console.log("Changing password for:", phone, "New password:", password);
     
     // بعد از موفقیت، به داشبورد می‌رویم
-    router.push("/dashboard");
+    router.push("/Domain");
   }
 
   // اگر OTP تایید شده، صفحه تنظیم رمز عبور را نشان می‌دهیم
