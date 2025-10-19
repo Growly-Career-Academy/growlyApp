@@ -15,7 +15,7 @@ export default function NumInput({ value, onChange, onEdit }) {
       />
       <button
         type="button"
-        className="absolute inset-y-0 right-3 flex items-center text-blue-600 text-sm"
+        className="absolute inset-y-0 right-3 flex items-center text-blue-600 text-xs"
         onClick={onEdit}
       >
         تغییر

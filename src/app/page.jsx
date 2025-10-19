@@ -14,8 +14,12 @@ export default function HomePage() {
         <h1 className="text-2xl font-medium text-black text-center mb-6 leading-[40px]">
           به گرولی خوش اومدی
         </h1>
-        <p className="text-black font-medium text-center leading-[28px] text-base px-12 mb-15">
-          طی مراحل پیش رو بهت میگیم که مسیر یادگیری تخصص هدفت رو از کجا شروع کنی و چطور تا انتها ادامه بدی
+        <p className="text-black font-medium text-center leading-[28px] text-base px-5 mb-15">
+          طی مراحل پیش رو بهت میگیم که مسیر
+          <br />
+           یادگیری تخصص هدفت رو از کجا شروع کنی
+          <br />
+          و چطور تا انتها ادامه بدی.
         </p>
         <div className="w-full max-w-sm pb-4">
           <Button onClick={() => router.push("/login")}>

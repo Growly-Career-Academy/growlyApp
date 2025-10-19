@@ -1,23 +1,17 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import Image from "next/image";
+import { useState } from "react";
 import { useRouter } from "next/navigation";
 import SelectableCard from "@/components/SelectableCard";
 import Button from "@/components/Button";
 
 export default function DomainClient({ domain = [] }) {
-  // ✅ اگر props نیاد، domain پیش‌فرض آرایه‌ی خالی است
-  const list = Array.isArray(domain) ? domain : []; // ✅ محافظ دوم
+  const list = Array.isArray(domain) ? domain : [];
 
   const [selected, setSelected] = useState(new Set());
   const [submitting, setSubmitting] = useState(false);
   const router = useRouter();
-
-  const icons = useMemo(() => ({
-    "برنامه نویسی": "💻",
-    "کسب و کار": "📈",
-    "آی تی و نرم‌افزار": "🖥️",
-  }), []);
 
   const setChecked = (id, next) => {
     setSelected(prev => {
@@ -36,11 +30,7 @@ export default function DomainClient({ domain = [] }) {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),
       }).catch(() => null);
-      if (res && res.ok) {
-        await res.json().catch(() => null);
-      }
-    } catch (e) {
-      // ignore and continue navigation
+      if (res && res.ok) await res.json().catch(() => null);
     } finally {
       setSubmitting(false);
       router.push("/career");
@@ -51,7 +41,6 @@ export default function DomainClient({ domain = [] }) {
 
   return (
     <div className="flex flex-col flex-1">
-      {/* اگر خالی بود پیام ملایم بده */}
       {list.length === 0 ? (
         <div className="text-center text-growly-gray text-base py-8">
           موردی برای نمایش وجود ندارد.
@@ -65,9 +54,19 @@ export default function DomainClient({ domain = [] }) {
               onChange={(next) => setChecked(f.id, next)}
             >
               <div className="flex flex-col items-center text-center gap-2">
-                <div className="h-8 w-8 rounded-full flex items-center justify-center bg-[#F4F5F6] text-[#0B834F] text-base">
-                  {icons[f.title] ?? "⬚"}
-                </div>
+                {/* فقط آیکونِ خودت */}
+                {f.icon ? (
+                  <div className="h-10 w-10 rounded-full flex items-center justify-center bg-[#F4F5F6]">
+                    <Image
+                      src={f.icon}           // مثلا "/DomainIcons/1.svg"
+                      alt={f.title}
+                      width={24}
+                      height={24}
+                      className="object-contain"
+                    />
+                  </div>
+                ) : null}
+
                 <div className="flex flex-col">
                   <span className="text-sm font-medium text-[#111827]">{f.title}</span>
                   <span className="text-xs text-[var(--growly-gray,#747474)]">{f.description}</span>

@@ -4,14 +4,14 @@ import DomainClient from "./Domain";
 export const metadata = { title: "Domain | Growly" };
 
 const domain = [
-  { id: 1, title: "برنامه نویسی", description: "Programming" },
-  { id: 2, title: "کسب و کار", description: "Business" },
-  { id: 3, title: "آی تی و نرم‌افزار", description: "IT and Software" },
+  { id: 1, title: "برنامه‌نویسی", description: "Programming", icon: "/DomainIcons/2.svg" },
+  { id: 2, title: "کسب و کار", description: "Business", icon: "/DomainIcons/1.svg" },
+  { id: 3, title: "آی‌تی و نرم‌‌افزار", description: "IT and Software", icon: "/DomainIcons/3.svg" },
 ];
 
 export default function DomainPage() {
   return (
-    <div className="min-h-screen bg-white flex flex-col px-6 py-25 my-auto" dir="rtl">
+    <div className="min-h-screen bg-white flex flex-col px-10 py-25 my-auto" dir="rtl">
       <div className="flex flex-col flex-1 max-w-sm w-full mx-auto">
         <SleekStepper current={1} steps={3} logoSrc="/logo.png" />
         <div className="text-center">

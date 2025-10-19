@@ -44,10 +44,10 @@ export default function ForgotPasswordPage() {
       <div className="h-screen bg-white flex flex-col items-center justify-center px-6 py-6 overflow-hidden">
         <div className="flex flex-col items-center justify-center flex-1 max-w-sm w-full">
           <div className="text-center mb-8">
-            <h1 className="text-xl font- text-foreground mb-6">
+            <h1 className="text-xl font-medium text-foreground mb-6">
               بازیابی رمز عبور
             </h1>
-            <p className="text-sm text-foreground">
+            <p className="text-sm font-medium text-foreground">
               رمز عبور جدید خودت رو وارد کن
             </p>
           </div>

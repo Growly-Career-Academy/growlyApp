@@ -29,7 +29,7 @@ export default function SleekStepper({ current = 1, steps = 3, logoSrc = "/logo.
           return (
             <span
               key={i}
-              className={`h-2 w-16 sm:w-24 md:w-28 rounded-full transition-all duration-300 ${
+              className={`h-2 w-14 sm:w-24 md:w-28 rounded-full transition-all duration-300 ${
                 isFilled ? "bg-[#0B834F]" : "bg-[#EAEAEA]"
               }`}
             />

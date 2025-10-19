@@ -101,7 +101,7 @@ export default function OTPClient({ phone, length = 5, flow = "signup" }) {
         type="button"
         onClick={resend}
         disabled={sec > 0}
-        className={`block mx-auto text-sm ${
+        className={`block mx-auto text-xs ${
           sec > 0 ? "text-gray-400 cursor-not-allowed" : "text-blue-600"
         }`}
       >
