@@ -11,10 +11,11 @@ const domain = [
 
 export default function DomainPage() {
   return (
-    <div className="min-h-screen bg-white flex flex-col px-10 py-25 my-auto" dir="rtl">
-      <div className="flex flex-col flex-1 max-w-sm w-full mx-auto">
+    <div className="h-[100dvh] overflow-hidden bg-white flex flex-col px-10 py-25 pb-0" dir="rtl">
+      <div className="flex flex-col flex-1 max-w-sm w-full mx-auto min-h-0">
         <SleekStepper current={1} steps={3} logoSrc="/logo.png" />
-        <div className="text-center">
+
+        <div className="text-center shrink-0">
           <h1 className="text-2xl font-medium mt-10">
             می‌خوای تو چه زمینه‌ای
             <br />
@@ -24,6 +25,8 @@ export default function DomainPage() {
             این فقط یک نقطه شروعه. انتخابت، محدودیتی در استفاده از منابع ایجاد نمی‌کنه.
           </p>
         </div>
+
+        {/* ناحیه کلاینت: خودش اسکرول کارت‌ها و فوتر چسبیده را مدیریت می‌کند */}
         <div className="mt-6 flex flex-col flex-1 min-h-0">
           <DomainClient domain={domain} />
         </div>
@@ -31,3 +34,4 @@ export default function DomainPage() {
     </div>
   );
 }
+
