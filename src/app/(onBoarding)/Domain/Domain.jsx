@@ -8,32 +8,27 @@ import SelectableCard from "@/components/SelectableCard";
 
 export default function DomainClient({ domains = [], fetchErr = "" }) {
   const router = useRouter();
-  const [selected, setSelected] = useState(new Set());
+  const [selected, setSelected] = useState(null);
   const [submitting, setSubmitting] = useState(false);
 
-  const toggleSelect = (slug, next) => {
-    setSelected((prev) => {
-      const s = new Set(prev);
-      next ? s.add(slug) : s.delete(slug);
-      return s;
-    });
+  const toggleSelect = (slug) => {
+    setSelected((prev) => (prev === slug ? null : slug)); // انتخاب مجدد = لغو
   };
 
   const handleSubmit = async () => {
-    if (selected.size === 0) return;
-    setSubmitting(true);
-    const slugs = Array.from(selected);
-    const firstSlug = slugs[0];
+    if (!selected) return;
+    const firstSlug = selected;
     try {
       // اگر خواستی ذخیره بکنی، اینجا می‌فرستی
       // await fetch("/api/domain/save", { ... });
     } finally {
       setSubmitting(false);
+      if (!selected) return;
+      const firstSlug = selected;
       router.push(`/Profession?domain=${encodeURIComponent(firstSlug)}`);
     }
   };
 
-  const noneSelected = selected.size === 0;
 
   return (
     <div className="flex flex-col flex-1 min-h-0">
@@ -51,7 +46,7 @@ export default function DomainClient({ domains = [], fetchErr = "" }) {
             {domains.map((f) => (
               <SelectableCard
                 key={f.slug}
-                checked={selected.has(f.slug)}
+                checked={selected === f.slug}
                 onChange={(next) => toggleSelect(f.slug, next)}
               >
                 <div className="flex flex-col items-center text-center gap-2">
@@ -86,7 +81,7 @@ export default function DomainClient({ domains = [], fetchErr = "" }) {
         <div className="rounded-t-[28px] bg-white shadow-[0_-10px_40px_rgba(0,0,0,0.08)] px-10 pt-5 pb-20">
           <Button
             onClick={handleSubmit}
-            disabled={submitting || noneSelected}
+            disabled={submitting || !selected}
             className="w-full rounded-[28px] text-[18px] font-semibold"
           >
             <span className="inline-flex text-xl font-medium items-center justify-center gap-3">
