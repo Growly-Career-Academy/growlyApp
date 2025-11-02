@@ -5,40 +5,90 @@ import { useState, useMemo } from "react";
 import Button from "@/components/Button";
 import Input from "@/components/inputs/Input";
 import PassInput from "@/components/inputs/PassInput";
-import NumInput from "@/components/inputs/NumInput";
 
 export default function ForgotPasswordPage() {
   const router = useRouter();
   const search = useSearchParams();
-  
-  // دریافت پارامترها از URL
-  const initialPhone = useMemo(() => search.get("phone") || "", [search]);
-  const isOTPVerified = useMemo(() => !!initialPhone, [initialPhone]);
-  
-  // state ها
+
+  // از URL
+  const initialPhone = useMemo(() => (search.get("phone") || "").replace(/\D/g, ""), [search]);
+  const initialCode  = useMemo(() => (search.get("code")  || "").replace(/\D/g, ""), [search]);
+
+  // OTP تایید شده یعنی هم phone داریم هم code داریم
+  const isOTPVerified = useMemo(
+    () => !!initialPhone && !!initialCode,
+    [initialPhone, initialCode]
+  );
+
+  // state
   const [phone, setPhone] = useState(initialPhone);
+  const [code, setCode]   = useState(initialCode); // اینو کاربر توی این صفحه ویرایش نمی‌کنه معمولا
   const [password, setPassword] = useState("");
 
-  function handlePhoneSubmit(e) {
+  const [loading, setLoading] = useState(false);
+  const [err, setErr] = useState("");
+
+  // مرحله اول: فقط شماره می‌گیره و می‌فرستیم صفحه OTP
+  async function handlePhoneSubmit(e) {
     e.preventDefault();
-    if (!phone) return;
+    setErr("");
+
+    if (!phone) {
+      setErr("شماره موبایل لازم است");
+      return;
+    }
+
     const normalized = phone.replace(/\D/g, "");
-    // بعد از وارد کردن شماره، به صفحه OTP می‌رویم
-    router.push(`/forgot-password/otp?phone=${encodeURIComponent(normalized)}`);
+
+    // مستقیم می‌بریمش صفحه OTP فراموشی رمز
+    router.push(`/forgot-password/OTP?phone=${encodeURIComponent(normalized)}`);
   }
 
-  function handlePasswordSubmit(e) {
+  // مرحله دوم: ست کردن رمز جدید
+  async function handlePasswordSubmit(e) {
     e.preventDefault();
-    if (!password) return;
+    setErr("");
 
-    // TODO: API برای تغییر رمز عبور
-    console.log("Changing password for:", phone, "New password:", password);
-    
-    // بعد از موفقیت، به داشبورد می‌رویم
-    router.push("/Domain");
+    if (!password) {
+      setErr("رمز عبور جدید لازم است");
+      return;
+    }
+
+    try {
+      setLoading(true);
+
+      // POST به /api/auth/password-reset
+      const res = await fetch("/api/auth/password-reset", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          phone,
+          code,              // کد ۶ رقمی که تو صفحه OTP گرفتیم
+          new_password: password,
+        }),
+      });
+
+      const data = await res.json().catch(() => ({}));
+
+      if (!res.ok) {
+        throw new Error(
+          data?.message ||
+            data?.detail ||
+            data?.error ||
+            "تغییر رمز ناموفق بود"
+        );
+      }
+
+      // موفق بود → بفرستش صفحه ورود با پسورد
+      router.push(`/login/password?phone=${encodeURIComponent(phone)}`);
+    } catch (e) {
+      setErr(e.message || "خطای ناشناخته");
+    } finally {
+      setLoading(false);
+    }
   }
 
-  // اگر OTP تایید شده، صفحه تنظیم رمز عبور را نشان می‌دهیم
+  // ---------- اگر OTP تأیید شده (یعنی phone و code داریم): فرم وارد کردن پسورد جدید ----------
   if (isOTPVerified) {
     return (
       <div className="h-screen bg-white flex flex-col items-center justify-center px-6 py-6 overflow-hidden">
@@ -52,14 +102,21 @@ export default function ForgotPasswordPage() {
             </p>
           </div>
 
-          <form className="w-full flex flex-col gap-6" onSubmit={handlePasswordSubmit}>
+          <form
+            className="w-full flex flex-col gap-6"
+            onSubmit={handlePasswordSubmit}
+          >
+            {/* شماره رو فقط نشون می‌دیم که بدونه برای کدوم حسابه */}
+            {/* <div className="text-xs text-center text-gray-500" dir="ltr">
+              {phone}
+            </div> */}
+
             <PassInput
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               placeholder="Password"
             />
 
-            {/* Password Requirements */}
             <div className="space-y-2 mr-2">
               <div className="flex items-center gap-2 text-xs text-foreground">
                 <div className="w-1 h-1 bg-gray-600 rounded-full"></div>
@@ -75,18 +132,23 @@ export default function ForgotPasswordPage() {
               </div>
             </div>
 
-            <Button type="submit">ورود</Button>
+            {err && (
+              <p className="text-red-600 text-xs text-center">{err}</p>
+            )}
+
+            <Button type="submit" disabled={loading}>
+              {loading ? "در حال ذخیره..." : "ورود"}
+            </Button>
           </form>
         </div>
       </div>
     );
   }
 
-  // صفحه اولیه برای وارد کردن شماره موبایل
+  // ---------- اگر هنوز OTP تایید نشده: فرم گرفتن شماره موبایل ----------
   return (
     <div className="h-screen bg-white flex flex-col items-center justify-center px-6 py-6 overflow-hidden">
       <div className="flex flex-col items-center justify-center flex-1 max-w-sm w-full">
-        {/* Header */}
         <div className="text-center mb-8">
           <h1 className="text-xl font-medium color-foreground mb-4">
             فراموشی رمز عبور
@@ -97,12 +159,15 @@ export default function ForgotPasswordPage() {
           </p>
         </div>
 
-        {/* Form */}
-        <form className="w-full flex flex-col gap-4" onSubmit={handlePhoneSubmit}>
+        <form
+          className="w-full flex flex-col gap-4"
+          onSubmit={handlePhoneSubmit}
+        >
           <div className="text-right">
             <label className="text-sm font-medium block mb-2 text-center">
               شماره موبایل خودت رو وارد کن
             </label>
+
             <Input
               type="tel"
               placeholder="۰۹۱۲۲۲۲۲۲۲۲"
@@ -113,6 +178,10 @@ export default function ForgotPasswordPage() {
             />
           </div>
 
+          {err && (
+            <p className="text-red-600 text-xs text-center">{err}</p>
+          )}
+
           <Button type="submit">
             ارسال کد تایید
           </Button>
@@ -121,5 +190,3 @@ export default function ForgotPasswordPage() {
     </div>
   );
 }
-
-

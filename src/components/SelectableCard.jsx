@@ -10,7 +10,7 @@ export default function SelectableCard({ checked = false, onChange, children, cl
         />
         <div
           className={[
-            "w-full rounded-2xl border px-4 py-5 text-right transition-colors duration-150",
+            "w-full rounded-2xl border px-1 py-5 text-right transition-colors duration-150",
           // انتخاب‌شده
             checked ? "border-[#0B834F] bg-[#E7F3ED]" :
           // انتخاب‌نشده
