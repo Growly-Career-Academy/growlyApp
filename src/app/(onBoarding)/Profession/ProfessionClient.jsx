@@ -112,7 +112,7 @@ export default function ProfessionClient({
                       key={opt.id}
                       type="button"
                       onClick={() => handlePick(opt)}
-                      className={`w-full text-right px-4 py-3 flex items-center gap-3 hover:bg-[#F3F4F6] ${
+                      className={`w-full text-right py-3 flex items-center gap-3 hover:bg-[#F3F4F6] ${
                         active ? "bg-[#F3F4F6]" : ""
                       }`}
                     >
