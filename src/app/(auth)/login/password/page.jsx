@@ -1,12 +1,15 @@
 "use client";
 
 import { useRouter, useSearchParams } from "next/navigation";
-import { useState, useMemo } from "react";
+import { useState, useMemo, Suspense } from "react";
 import Button from "@/components/Button";
 import PassInput from "@/components/inputs/PassInput";
 import NumInput from "@/components/inputs/NumInput";
 
-export default function LoginPasswordPage() {
+// Force dynamic rendering to avoid build errors with useSearchParams
+export const dynamic = 'force-dynamic';
+
+function LoginPasswordContent() {
   const router = useRouter();
   const search = useSearchParams();
 
@@ -181,5 +184,24 @@ export default function LoginPasswordPage() {
         </form>
       </div>
     </div>
+  );
+}
+
+export default function LoginPasswordPage() {
+  return (
+    <Suspense fallback={
+      <div className="h-screen bg-white flex flex-col items-center justify-center px-6 py-6 overflow-hidden">
+        <div className="flex flex-col items-center justify-center flex-1 max-w-sm w-full">
+          <div className="text-center mb-8">
+            <h1 className="text-xl font-medium text-gray-800 mb-2">
+              رمز عبور خودت رو وارد کن
+            </h1>
+          </div>
+          <div className="w-full">در حال بارگذاری...</div>
+        </div>
+      </div>
+    }>
+      <LoginPasswordContent />
+    </Suspense>
   );
 }

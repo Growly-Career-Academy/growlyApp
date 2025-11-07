@@ -1,12 +1,15 @@
 "use client";
 
 import { useRouter, useSearchParams } from "next/navigation";
-import { useState, useMemo } from "react";
+import { useState, useMemo, Suspense } from "react";
 import Button from "@/components/Button";
 import Input from "@/components/inputs/Input";
 import PassInput from "@/components/inputs/PassInput";
 
-export default function ForgotPasswordPage() {
+// Force dynamic rendering to avoid build errors with useSearchParams
+export const dynamic = 'force-dynamic';
+
+function ForgotPasswordContent() {
   const router = useRouter();
   const search = useSearchParams();
 
@@ -188,5 +191,24 @@ export default function ForgotPasswordPage() {
         </form>
       </div>
     </div>
+  );
+}
+
+export default function ForgotPasswordPage() {
+  return (
+    <Suspense fallback={
+      <div className="h-screen bg-white flex flex-col items-center justify-center px-6 py-6 overflow-hidden">
+        <div className="flex flex-col items-center justify-center flex-1 max-w-sm w-full">
+          <div className="text-center mb-8">
+            <h1 className="text-xl font-medium color-foreground mb-4">
+              فراموشی رمز عبور
+            </h1>
+          </div>
+          <div className="w-full">در حال بارگذاری...</div>
+        </div>
+      </div>
+    }>
+      <ForgotPasswordContent />
+    </Suspense>
   );
 }
