@@ -43,35 +43,41 @@ export default function DomainClient({ domains = [], fetchErr = "" }) {
       ) : (
         <div className="flex-1 overflow-y-auto">
           <div className="grid grid-cols-2 gap-3 pb-3">
-            {domains.map((f) => (
-              <SelectableCard
-                key={f.slug}
-                checked={selected === f.slug}
-                onChange={(next) => toggleSelect(f.slug, next)}
-              >
-                <div className="flex flex-col items-center text-center gap-2">
-                  <div className="h-10 w-10 rounded-full flex items-center justify-center bg-[#F4F5F6]">
-                    <Image
-                      src={f.icon || "/DomainIcons/default.svg"}  // 👈 اگر null بود، fallback نمایش داده میشه
-                      alt={f.title || "icon"}
-                      width={24}
-                      height={24}
-                      className="object-contain"
-                    />
-                  </div>
+            {domains.map((f) => {
+              const iconSrc = f.icon || "/DomainIcons/default.png"; // 👈 اگر null بود، fallback نمایش داده میشه
+              const shouldUnoptimize =
+                typeof f.icon === "string" && /^https?:\/\//i.test(f.icon);
 
+              return (
+                <SelectableCard
+                  key={f.slug}
+                  checked={selected === f.slug}
+                  onChange={(next) => toggleSelect(f.slug, next)}
+                >
+                  <div className="flex flex-col items-center text-center gap-2">
+                    <div className="h-10 w-10 flex items-center justify-center">
+                      <Image
+                        src={iconSrc}
+                        alt={f.title || "icon"}
+                        width={24}
+                        height={24}
+                        className="object-contain"
+                        unoptimized={shouldUnoptimize}
+                      />
+                    </div>
 
-                  <div className="flex flex-col">
-                    <span className="text-sm font-medium mb-2 text-[#111827]">
-                      {f.title}
-                    </span>
-                    <span className="text-xs text-[#747474]">
-                      {f.description}
-                    </span>
+                    <div className="flex flex-col">
+                      <span className="text-sm font-medium mb-2 text-[#111827]">
+                        {f.title}
+                      </span>
+                      <span className="text-xs text-[#747474]">
+                        {f.description}
+                      </span>
+                    </div>
                   </div>
-                </div>
-              </SelectableCard>
-            ))}
+                </SelectableCard>
+              );
+            })}
           </div>
         </div>
       )}

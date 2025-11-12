@@ -1,6 +1,8 @@
 import SleekStepper from "@/components/SleekStepper";
 import ProfessionClient from "./ProfessionClient";
 import { cookies } from "next/headers";
+import Link from "next/link";
+
 
 export const metadata = { title: "Profession | Growly" };
 
@@ -55,10 +57,19 @@ export default async function ProfessionPage({ searchParams }) {
 
   return (
     <div
-      className="h-[100dvh] overflow-hidden bg-white flex flex-col px-5 py-25 pb-0"
+      className="h-[100dvh] overflow-hidden bg-white flex flex-col px-6 py-10 pb-0"
       dir="rtl"
     >
+      {/* دکمه بازگشت بالا، سمت چپ */}
+      <Link
+        href="/Domain"
+        className="ml-4 self-end mt-5 mb-10 flex items-center gap-1 text-sm text-[#6B7280] hover:text-[#111827]"
+      >
+        <span className="text-sm font-normal text-[#595959]">بازگشت</span>
+        <img src="/Arrow-Up.svg" alt="بازگشت" />
+      </Link>
       <div className="flex flex-col flex-1 max-w-sm w-full mx-auto min-h-0">
+
         {/* استپر بالای صفحه */}
         <SleekStepper current={2} steps={3} logoSrc="/logo.png" />
 

@@ -4,6 +4,56 @@ import { cookies } from "next/headers";
 
 export const metadata = { title: "Domain | Growly" };
 
+const assetBase =
+  process.env.NEXT_PUBLIC_MEDIA_BASE || process.env.NEXT_PUBLIC_API_BASE;
+
+const slugToIcon = (slug) => {
+  if (typeof slug !== "string") return null;
+  const trimmed = slug.trim();
+  if (!trimmed) return null;
+  return `/DomainIcons/${trimmed}.svg`;
+};
+
+const toAbsoluteUrl = (value) => {
+  if (typeof value !== "string" || value.trim().length === 0) return null;
+  const trimmed = value.trim();
+
+  if (/^https?:\/\//i.test(trimmed)) return trimmed;
+  if (trimmed.startsWith("//")) return `https:${trimmed}`;
+  if (trimmed.startsWith("/")) return trimmed;
+
+  if (!assetBase) return trimmed;
+
+  try {
+    return new URL(trimmed, assetBase).toString();
+  } catch {
+    return trimmed;
+  }
+};
+
+const extractIcon = (item) => {
+  if (!item || typeof item !== "object") return null;
+
+  const candidates = [
+    item.icon_url,
+    item.iconUrl,
+    typeof item.icon === "string" ? item.icon : null,
+    item.icon?.url,
+    item.icon?.file,
+    item.assets?.icon,
+    item.assets?.icon_url,
+    item.image,
+    slugToIcon(item.slug),
+  ];
+
+  for (const candidate of candidates) {
+    const resolved = toAbsoluteUrl(candidate);
+    if (resolved) return resolved;
+  }
+
+  return null;
+};
+
 export default async function DomainPage() {
   const base = process.env.NEXT_PUBLIC_API_BASE; // مثلا https://api.growly.ir/api/v1
   const token = cookies().get("auth_token")?.value;
@@ -29,7 +79,7 @@ export default async function DomainPage() {
           slug: item.slug,
           title: item.name,
           description: item.description || "",
-          icon: null, // placeholder حذف شد
+          icon: extractIcon(item),
         }));
       } else {
         fetchErr = "داده نامعتبر از سرور";

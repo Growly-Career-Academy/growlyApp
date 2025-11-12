@@ -10,9 +10,9 @@ function Pill({ checked, children, onClick }) {
       type="button"
       onClick={onClick}
       className={[
-        "px-4 py-2 rounded-xl text-sm transition border",
+        "p-2 m-1 rounded-xl text-sm transition border",
         checked
-          ? "bg-[#E7F4EE] text-[#0B834F] border-[#0B834F]"
+          ? "bg-[#E7F4EE] text-black border-growly-green"
           : "bg-white text-[#111827] border-[#E5E7EB]"
       ].join(" ")}
     >
@@ -63,10 +63,10 @@ export default function SkillsClient({ groups = [] }) {
           groups.map(group => (
             <div key={group.id} className="mb-4">
               {/* عنوان گروه (اختیاری) */}
-              {/* <div className="text-[#6B7280] text-sm mb-3">{group.title}</div> */}
+              <div className="text-[#6B7280] text-sm mb-3">{group.title}</div>
 
               {/* شبکهٔ چِپس‌ها */}
-              <div className="grid grid-cols-2 gap-3">
+              <div className="text-center">
                 {group.options.map(opt => {
                   const checked = selected.has(opt.id);
                   return (
@@ -82,13 +82,6 @@ export default function SkillsClient({ groups = [] }) {
               </div>
             </div>
           ))
-        )}
-
-        {/* راهنمای حداقل انتخاب */}
-        {!canContinue && !isEmpty && (
-          <div className="text-center text-[#9CA3AF] text-sm py-4">
-            حداقل {minRequired} مهارت رو انتخاب کن.
-          </div>
         )}
       </div>
 
