@@ -26,6 +26,9 @@
     --foreground: #ededed;
   }
 } */
+html {
+  overflow: hidden; /* Prevent horizontal scroll */
+}
 
 body {
   background: var(--background);
@@ -51,6 +54,16 @@ input, textarea {
   user-select: text;
 }
 
+.scrollbar-none::-webkit-scrollbar {
+  display: none; /* برای Chrome, Safari, Edge */
+}
+
+/* Ensure no scroll on auth pages */
+.auth-page {
+  height: 100vh;
+  overflow: hidden;
+}
+
 /* Mobile optimizations */
 @media (max-width: 768px) {
   body {
@@ -58,18 +71,10 @@ input, textarea {
     overflow-x: hidden; /* Prevent horizontal scroll */
   }
   
-  html {
-    overflow-x: hidden; /* Prevent horizontal scroll */
-  }
-  
   input, textarea, select {
     font-size: 16px; /* Prevent zoom on iOS */
   }
   
-  /* Ensure no scroll on auth pages */
-  .auth-page {
-    height: 100vh;
-    overflow: hidden;
-  }
+  
 }
 

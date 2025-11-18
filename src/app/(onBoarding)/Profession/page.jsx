@@ -35,9 +35,10 @@ export default async function ProfessionPage({ searchParams }) {
               id: "main",
               title: "لیست تخصص‌ها",
               options: data.map((item) => ({
-                id: item.slug || String(item.id),
+                id: item.slug || String(item.id),  // برای نمایش و URL
                 label: item.name,
                 description: item.description || "",
+                professionId: item.id,   
               })),
             },
           ];

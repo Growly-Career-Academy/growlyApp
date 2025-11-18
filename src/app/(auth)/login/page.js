@@ -46,8 +46,9 @@ export default function AuthPage() {
 
       // حالت: کاربر قبلاً ثبت شده و پسورد هم داره → صفحه ورود با پسورد
       if (registered && hasPassword) {
+        localStorage.setItem("phone", normalized);
         router.push(
-          `/login/password?phone=${encodeURIComponent(normalized)}`
+          `/login/password`
         );
         return;
       }

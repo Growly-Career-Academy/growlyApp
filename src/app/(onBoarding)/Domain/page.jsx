@@ -96,10 +96,10 @@ export default async function DomainPage() {
 
   return (
     <div
-      className="h-[100dvh] overflow-hidden bg-white flex flex-col px-10 py-25 pb-0"
+      className="h-[100dvh] overflow-hidden bg-white flex flex-col pb-0"
       dir="rtl"
     >
-      <div className="flex flex-col flex-1 max-w-sm w-full mx-auto min-h-0">
+      <div className="flex flex-col flex-1 max-w-sm w-full mx-auto min-h-0 px-10 pt-25">
         <SleekStepper current={1} steps={3} logoSrc="/logo.png" />
 
         <div className="text-center shrink-0">

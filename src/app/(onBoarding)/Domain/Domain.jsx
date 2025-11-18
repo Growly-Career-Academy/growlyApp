@@ -11,23 +11,32 @@ export default function DomainClient({ domains = [], fetchErr = "" }) {
   const [selected, setSelected] = useState(null);
   const [submitting, setSubmitting] = useState(false);
 
-  const toggleSelect = (slug) => {
-    setSelected((prev) => (prev === slug ? null : slug)); // انتخاب مجدد = لغو
+  const toggleSelect = (Domain) => {
+    setSelected((prev) => (prev?.slug === Domain.slug ? null : Domain)); // انتخاب مجدد = لغو
   };
 
   const handleSubmit = async () => {
     if (!selected) return;
-    const firstSlug = selected;
+  
+    setSubmitting(true);
     try {
-      // اگر خواستی ذخیره بکنی، اینجا می‌فرستی
-      // await fetch("/api/domain/save", { ... });
+      if (typeof window !== "undefined") {
+        localStorage.setItem(
+          "selectedDomain",
+          JSON.stringify({
+            id: selected.id,        // 👈 عدد واقعی که از API دامین می‌آد
+            slug: selected.slug,    // فقط برای URL
+            title: selected.title,
+          })
+        );
+      }
+  
+      router.push(`/Profession?domain=${encodeURIComponent(selected.slug)}`);
     } finally {
       setSubmitting(false);
-      if (!selected) return;
-      const firstSlug = selected;
-      router.push(`/Profession?domain=${encodeURIComponent(firstSlug)}`);
     }
   };
+  
 
 
   return (
@@ -41,7 +50,7 @@ export default function DomainClient({ domains = [], fetchErr = "" }) {
           موردی برای نمایش وجود ندارد.
         </div>
       ) : (
-        <div className="flex-1 overflow-y-auto">
+        <div className="flex-1 overflow-y-auto scrollbar-none">
           <div className="grid grid-cols-2 gap-3 pb-3">
             {domains.map((f) => {
               const iconSrc = f.icon || "/DomainIcons/default.png"; // 👈 اگر null بود، fallback نمایش داده میشه
@@ -51,8 +60,8 @@ export default function DomainClient({ domains = [], fetchErr = "" }) {
               return (
                 <SelectableCard
                   key={f.slug}
-                  checked={selected === f.slug}
-                  onChange={(next) => toggleSelect(f.slug, next)}
+                  checked={selected?.slug === f.slug}
+                  onChange={() => toggleSelect(f)}
                 >
                   <div className="flex flex-col items-center text-center gap-2">
                     <div className="h-10 w-10 flex items-center justify-center">

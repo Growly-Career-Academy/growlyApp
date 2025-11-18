@@ -1,7 +1,6 @@
 import SleekStepper from "@/components/SleekStepper";
 import SkillsClient from "./SkillsClient";
 import Link from "next/link";
-import { cookies } from "next/headers";
 import { headers } from "next/headers";
 
 export const metadata = { title: "Skills | Growly" };
@@ -12,25 +11,37 @@ export default async function SkillsPage({ searchParams }) {
   const cookieHeader = headers().get("cookie") ?? "";
 
   let groups = [];
+
   if (professionSlug) {
     try {
       const res = await fetch(
-        `${baseApp}/api/professions/${encodeURIComponent(professionSlug)}/skills`,
-        { cache: "no-store",
+        `${baseApp}/api/professions/${encodeURIComponent(
+          professionSlug
+        )}/skills/`,                     // ✅ ۱) اسلش آخر اضافه شد
+        {
+          cache: "no-store",
           headers: cookieHeader ? { Cookie: cookieHeader } : undefined,
-         }
+        }
       );
+
       if (res.ok) {
         const data = await res.json().catch(() => ({}));
         // data.skills = [{id,title,slug,description}]
         const options = Array.isArray(data.skills)
-          ? data.skills.map(s => ({
-              id: s.slug || String(s.id),
-              label: s.title || "",
-              raw: s,
-            }))
+          ? data.skills.map((s) => ({
+            id: s.id,                         // 👈 عدد واقعی
+            label: s.title || "",
+            description: s.description || "",
+          }))
           : [];
-        groups = [{ id: "main", options }];
+
+        groups = [
+          {
+            id: "main",
+            title: "مهارت‌ها",            // ✅ ۳) title اضافه شد
+            options,
+          },
+        ];
       }
     } catch (e) {
       console.error("[SkillsPage] fetch error:", e);
@@ -52,6 +63,7 @@ export default async function SkillsPage({ searchParams }) {
         <span className="text-sm font-normal text-[#595959]">بازگشت</span>
         <img src="/Arrow-Up.svg" alt="بازگشت" />
       </Link>
+
       <div className="flex flex-col flex-1 max-w-sm w-full mx-auto min-h-0">
         <SleekStepper current={3} steps={3} logoSrc="/logo.png" />
 

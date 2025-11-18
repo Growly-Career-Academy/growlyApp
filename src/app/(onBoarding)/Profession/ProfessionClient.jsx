@@ -6,7 +6,7 @@ import Button from "@/components/Button";
 import Image from "next/image";
 
 export default function ProfessionClient({
-  professions = [],   // [{ id, title, options:[{id,label,raw}] }]
+  professions = [],   // [{ id, title, options:[{id,label,professionId,...}] }]
   fetchErr = "",
   domainSlug = "",
 }) {
@@ -27,28 +27,41 @@ export default function ProfessionClient({
     return () => document.removeEventListener("mousedown", onDoc);
   }, []);
 
+  // 👇 اول flatOptions را تعریف می‌کنیم
   const flatOptions = useMemo(
     () =>
       professions.flatMap((g) =>
-        g.options.map((o) => ({ ...o, group: g.title }))
+        (g.options || []).map((o) => ({ ...o, group: g.title }))
       ),
     [professions]
   );
 
+  // 👇 بعد از آن ازش استفاده می‌کنیم
   const selectedLabel =
     flatOptions.find((o) => o.id === selectedId)?.label || "انتخاب تخصص";
 
-    const handlePick = (opt) => {
-      setSelectedId(opt.id);
-      setOpen(false);
-      // فقط برو به صفحه skills
-      router.push(`/skills?profession=${encodeURIComponent(opt.id)}`);
-    };
+  const handlePick = (opt) => {
+    setSelectedId(opt.id);
+    setOpen(false);
+  };
 
   const handleContinue = async () => {
     if (!selectedId) return;
     setSubmitting(true);
     try {
+      const selectedOpt = flatOptions.find((o) => o.id === selectedId);
+
+      if (selectedOpt && typeof window !== "undefined") {
+        localStorage.setItem(
+          "selectedProfession",
+          JSON.stringify({
+            id: selectedOpt.professionId, // 👈 فقط id عددی واقعی
+            slug: selectedOpt.id,         // slug
+            label: selectedOpt.label,
+          })
+        );
+      }
+
       router.push(`/skills?profession=${encodeURIComponent(selectedId)}`);
     } finally {
       setSubmitting(false);
@@ -75,9 +88,9 @@ export default function ProfessionClient({
               className="w-full h-12 rounded-xl border border-[#E5E7EB] text-[#6B7280] text-base text-right px-4 flex items-center justify-between"
             >
               <span
-                className={`${
+                className={
                   selectedId ? "text-[#111827]" : "text-[#BFBFBF]"
-                }`}
+                }
               >
                 {selectedLabel}
               </span>

@@ -1,7 +1,7 @@
 "use client";
 
-import { useRouter, useSearchParams } from "next/navigation";
-import { useState, useMemo, Suspense } from "react";
+import { useRouter } from "next/navigation";
+import { useState, useEffect, useMemo, Suspense } from "react";
 import Button from "@/components/Button";
 import PassInput from "@/components/inputs/PassInput";
 import NumInput from "@/components/inputs/NumInput";
@@ -11,48 +11,69 @@ export const dynamic = 'force-dynamic';
 
 function LoginPasswordContent() {
   const router = useRouter();
-  const search = useSearchParams();
 
-  // شماره‌ای که از مرحله قبلی (login با شماره) برامون اومده
-  const initialPhone = useMemo(() => search.get("phone") || "", [search]);
 
   // state ها
-  const [phone, setPhone] = useState(initialPhone);
+  const [phone, setPhone] = useState("");
   const [password, setPassword] = useState("");
-
   const [loading, setLoading] = useState(false); // برای دکمه "ورود"
   const [forgotLoading, setForgotLoading] = useState(false); // برای "فراموشی رمز"
   const [err, setErr] = useState("");
+
+  useEffect(() => {
+    try {
+      const savedPhone = localStorage.getItem("phone");
+      if (savedPhone) {
+        setPhone(savedPhone);
+      }
+    } catch { }
+  }, []);
 
   // --- ۱) لاگین با پسورد ---
   async function handleSubmit(e) {
     e.preventDefault();
     setErr("");
-
+  
     const normalizedPhone = phone.replace(/\D/g, "");
-
+  
     if (!normalizedPhone || !password) {
       setErr("شماره و رمز عبور را کامل وارد کن");
       return;
     }
-
+  
     try {
       setLoading(true);
-
-      // اینجا از Route Handler داخلی خودت استفاده کردی (/api/auth/password-login)
-      // که میره به بک و کوکی/توکن رو ست می‌کنه.
-      const res = await fetch("/api/auth/password-login", {
+  
+      const url = `${process.env.NEXT_PUBLIC_API_BASE}/auth/password/login/`;
+  
+      // 👇 برای دیباگ: ببین چی داری می‌فرستی
+      console.log("LOGIN REQUEST =>", {
+        url,
+        body: { phone: normalizedPhone, password },
+      });
+  
+      const res = await fetch(url, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+          Accept: "application/json",
+        },
         body: JSON.stringify({
           phone: normalizedPhone,
           password,
         }),
       });
-
-      const data = await res.json().catch(() => ({}));
-
+  
+      const text = await res.text();
+      console.log("LOGIN RESPONSE =>", res.status, text);
+  
+      let data = {};
+      try {
+        data = JSON.parse(text);
+      } catch (e) {}
+  
       if (!res.ok) {
+        // 👇 متن دقیق خطا از بک
         throw new Error(
           data?.message ||
             data?.detail ||
@@ -60,16 +81,20 @@ function LoginPasswordContent() {
             "ورود ناموفق بود"
         );
       }
-
-      // موفق شد
-      // (اینجا معمولاً توکن سمت سرور توی کوکی ست میشه)
-      router.push("/Domain"); // مسیر بعد از لاگین موفق
+  
+      if (data?.token) {
+        localStorage.setItem("authToken", data.token);
+      }
+  
+      router.push("/Domain");
     } catch (e) {
+      console.error("LOGIN ERROR:", e);
       setErr(e.message || "خطای ناشناخته");
     } finally {
       setLoading(false);
     }
   }
+  
 
   // --- ۲) فراموشی رمز عبور ---
   // این تابع اول به بک میگه "برای این شماره OTP بفرست"
