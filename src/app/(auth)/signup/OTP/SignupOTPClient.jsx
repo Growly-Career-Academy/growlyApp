@@ -4,7 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import Button from "@/components/Button";
 
-export default function SignupOTPClient({ phone, flow = "signup" }) {
+export default function SignupOTPClient({ flow = "signup" }) {
   const router = useRouter();
 
   const LENGTH = 6;
@@ -14,6 +14,15 @@ export default function SignupOTPClient({ phone, flow = "signup" }) {
   const [loadingResend, setLoadingResend] = useState(false); // لودینگ ارسال مجدد
   const [err, setErr] = useState(""); // پیام خطا
   const inputsRef = useRef([]);
+
+  // 👇 شماره را از localStorage بگیر
+  const [phone, setPhone] = useState("");
+  useEffect(() => {
+    try {
+      const stored = localStorage.getItem("phone");
+      if (stored) setPhone(stored);
+    } catch {}
+  }, []);
 
   const normalizedPhone = (phone || "").replace(/\D/g, "");
   const code = vals.join("");
@@ -81,7 +90,7 @@ export default function SignupOTPClient({ phone, flow = "signup" }) {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           phone: normalizedPhone,
-          code: userTypedCode,
+          code,
         }),
       });
 
@@ -155,6 +164,16 @@ export default function SignupOTPClient({ phone, flow = "signup" }) {
 
   return (
     <form onSubmit={handleSubmitOTP} className="space-y-6">
+      {/* نمایش شماره اگر پیدا شد */}
+      {normalizedPhone && (
+        <p className="text-center mt-5 text-sm text-[#595959]">
+          کد تایید برای شماره{" "}
+          <span dir="ltr" className="font-medium text-[#141414]">
+            {normalizedPhone}
+          </span>{" "}
+          پیامک شد
+        </p>
+      )}
       {/* ورودی‌های OTP */}
       <div
         className="flex justify-center gap-2"

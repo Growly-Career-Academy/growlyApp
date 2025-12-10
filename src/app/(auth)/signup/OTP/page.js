@@ -1,11 +1,10 @@
+// src/app/(auth)/signup/OTP/page.jsx
 import SignupOTPClient from "./SignupOTPClient";
 
 export const metadata = { title: "کد تایید | Growly" };
 
 export default async function SignupOTPPage({ searchParams }) {
-  // در Next 15 این searchParams یه Promiseـه
   const params = await searchParams;
-  const phone = params?.phone || "";
   const flow = params?.flow || "signup";
 
   return (
@@ -15,14 +14,8 @@ export default async function SignupOTPPage({ searchParams }) {
           کد تایید رو وارد کن
         </h1>
 
-        <p className="text-center text-[#595959] mb-6">
-          {flow === "forgot-password"
-            ? `کد تایید برای بازیابی رمز عبور شماره ${phone} پیامک شد`
-            : `کد تایید برای شماره ${phone} پیامک شد`}
-        </p>
-
-        {/* این واقعی‌ترین تفاوتشه: کل منطق OTP میره تو کلاینت */}
-        <SignupOTPClient phone={phone} flow={flow} />
+        {/* phone از URL نمیاد؛ فقط flow رو می‌فرستیم */}
+        <SignupOTPClient flow={flow} />
       </section>
     </div>
   );

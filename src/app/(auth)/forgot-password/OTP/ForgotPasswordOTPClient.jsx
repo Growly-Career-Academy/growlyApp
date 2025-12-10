@@ -1,45 +1,47 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Button from "@/components/Button";
 
-export default function ForgotPasswordOTPClient({ phone }) {
+export default function ForgotPasswordOTPClient() {
   const router = useRouter();
 
-  // شماره تمیز شده فقط برای API
+  // شماره موبایل از localStorage
+  const [phone, setPhone] = useState("");
   const normalizedPhone = (phone || "").replace(/\D/g, "");
 
-  // استیت‌های صفحه
-  const [digits, setDigits] = useState(Array(6).fill("")); // ۶ رقم OTP
-  const [loading, setLoading] = useState(false); // لودینگ دکمه "تایید"
-  const [resendLoading, setResendLoading] = useState(false); // لودینگ "دریافت مجدد کد"
-  const [errorMsg, setErrorMsg] = useState(""); // پیام خطا
+  const [digits, setDigits] = useState(Array(6).fill(""));
+  const [loading, setLoading] = useState(false);
+  const [resendLoading, setResendLoading] = useState(false);
+  const [errorMsg, setErrorMsg] = useState("");
+  const [cooldown, setCooldown] = useState(0);
   const inputsRef = useRef([]);
 
-  // وقتی صفحه لود میشه: درخواست ارسال SMS (forgot-password OTP)
+  // خواندن شماره از localStorage
   useEffect(() => {
-    async function sendInitialSMS() {
-      if (!normalizedPhone) return;
-
-      try {
-        // این روت لوکال ماست → proxy به بک `/auth/password/forgot/`
-        // body: { phone }
-        await fetch("/api/auth/password-forgot", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ phone: normalizedPhone }),
-        });
-        // حتی اگر fail کنه، UI رو نشون می‌دیم
-      } catch (err) {
-        console.error("[Forgot OTP] initial send error:", err);
+    try {
+      const stored = localStorage.getItem("phone");
+      if (stored) {
+        setPhone(stored);
       }
-    }
+    } catch {}
+  }, []);
 
-    sendInitialSMS();
-  }, [normalizedPhone]);
+  // شروع cooldown اولیه (برای کدی که صفحه قبل فرستاده)
+  useEffect(() => {
+    setCooldown(120); // ۲ دقیقه
+  }, []);
 
-  // تغییر هر خونه OTP
+  // تایمر برای کم شدن countdown
+  useEffect(() => {
+    if (cooldown <= 0) return;
+    const id = setInterval(() => {
+      setCooldown((prev) => (prev > 0 ? prev - 1 : 0));
+    }, 1000);
+    return () => clearInterval(id);
+  }, [cooldown]);
+
   function handleChangeDigit(i, raw) {
     const v = raw.replace(/\D/g, "").slice(0, 1);
     setDigits((prev) => {
@@ -47,14 +49,11 @@ export default function ForgotPasswordOTPClient({ phone }) {
       next[i] = v;
       return next;
     });
-
-    // اگر چیزی وارد شد و هنوز به آخر نرسیدیم، فوکوس بعدی
     if (v && i < 5) {
       inputsRef.current[i + 1]?.focus();
     }
   }
 
-  // Backspace روی خونه خالی → برگرد قبلی
   function handleKeyDown(i, e) {
     if (e.key === "Backspace" && !digits[i] && i > 0) {
       setDigits((prev) => {
@@ -66,29 +65,23 @@ export default function ForgotPasswordOTPClient({ phone }) {
     }
   }
 
-  // Paste کل کد
   function handlePaste(e) {
     e.preventDefault();
     const pasted = (e.clipboardData.getData("text") || "")
       .replace(/\D/g, "")
       .slice(0, 6);
-
     if (!pasted) return;
-
     const arr = pasted.split("");
     while (arr.length < 6) arr.push("");
-
     setDigits(arr);
     inputsRef.current[Math.min(arr.length - 1, 5)]?.focus();
   }
 
-  // دکمه تایید
   async function handleSubmit(e) {
     e.preventDefault();
     setErrorMsg("");
 
     const code = digits.join("");
-
     if (code.length !== 6) {
       setErrorMsg("کد ۶ رقمی رو کامل وارد کن");
       return;
@@ -100,10 +93,6 @@ export default function ForgotPasswordOTPClient({ phone }) {
 
     setLoading(true);
     try {
-      // طبق نیاز تو:
-      // اینجا هنوز verify واقعی نمیزنیم
-      // فقط میریم صفحه بعدی (forgot-password)
-      // و phone + code رو با query میبریم
       router.push(
         `/forgot-password?phone=${encodeURIComponent(
           normalizedPhone
@@ -117,27 +106,36 @@ export default function ForgotPasswordOTPClient({ phone }) {
     }
   }
 
-  // دکمه "دریافت مجدد کد"
   async function handleResend() {
     if (!normalizedPhone) return;
+    if (cooldown > 0) return;
 
     setResendLoading(true);
     setErrorMsg("");
 
     try {
-      // همون api که اول صفحه هم صدا زدیم:
-      // POST /api/auth/password-forgot  →  calls backend /auth/password/forgot/
       const res = await fetch("/api/auth/password-forgot", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ phone: normalizedPhone }),
       });
 
+      const text = await res.text();
+
       if (!res.ok) {
-        const text = await res.text();
         console.error("[Forgot OTP] resend failed:", text);
-        setErrorMsg("ارسال مجدد کد ناموفق بود");
+        if (res.status === 429) {
+          setErrorMsg(
+            "به دلیل درخواست‌های متعدد، تا حدود ۳۰ دقیقه امکان ارسال مجدد کد وجود ندارد."
+          );
+        } else {
+          setErrorMsg("ارسال مجدد کد ناموفق بود");
+        }
+        return;
       }
+
+      setErrorMsg("");
+      setCooldown(120);
     } catch (err) {
       console.error("[Forgot OTP] resend network error:", err);
       setErrorMsg("خطای شبکه در ارسال مجدد کد");
@@ -146,11 +144,9 @@ export default function ForgotPasswordOTPClient({ phone }) {
     }
   }
 
-  // ---- UI ----
   return (
     <div className="min-h-[100dvh] grid place-items-center bg-white">
       <section className="w-full max-w-md px-6">
-        {/* تیتر و توضیح مطابق دیزاین تو */}
         <h1 className="text-center text-xl font-medium text-[#141414] mb-2">
           کد تایید رو وارد کن
         </h1>
@@ -164,7 +160,6 @@ export default function ForgotPasswordOTPClient({ phone }) {
         </p>
 
         <form onSubmit={handleSubmit} className="space-y-6">
-          {/* باکس های OTP */}
           <div
             className="flex justify-center gap-2"
             dir="ltr"
@@ -188,28 +183,29 @@ export default function ForgotPasswordOTPClient({ phone }) {
             ))}
           </div>
 
-          {/* پیام خطا */}
           {errorMsg && (
             <p className="text-red-600 text-xs text-center">{errorMsg}</p>
           )}
 
-          {/* دکمه تایید */}
           <Button type="submit" disabled={loading}>
             {loading ? "در حال بررسی..." : "تایید"}
           </Button>
 
-          {/* دکمه دریافت مجدد کد - از همون اول فعاله */}
           <button
             type="button"
             onClick={handleResend}
-            disabled={resendLoading}
+            disabled={resendLoading || cooldown > 0}
             className={`block mx-auto text-xs ${
-              resendLoading
+              resendLoading || cooldown > 0
                 ? "text-gray-400 cursor-not-allowed"
                 : "text-blue-600"
             }`}
           >
-            {resendLoading ? "در حال ارسال..." : "دریافت مجدد کد"}
+            {resendLoading
+              ? "در حال ارسال..."
+              : cooldown > 0
+              ? ` ارسال مجدد ${cooldown}`
+              : "دریافت مجدد کد"}
           </button>
         </form>
       </section>

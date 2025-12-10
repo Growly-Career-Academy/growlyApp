@@ -14,27 +14,47 @@ export async function POST(req) {
     const base = process.env.NEXT_PUBLIC_API_BASE; // e.g. https://api.growly.ir/api/v1
     const upstream = await fetch(`${base}/auth/password/login/`, {
       method: "POST",
-      headers: { "Content-Type": "application/json", Accept: "application/json" },
+      headers: {
+        "Content-Type": "application/json",
+        Accept: "application/json",
+      },
       body: JSON.stringify({ phone, password }),
     });
 
     const text = await upstream.text();
-    let data; try { data = JSON.parse(text); } catch { data = {}; }
+    let data;
+    try {
+      data = JSON.parse(text);
+    } catch {
+      data = {};
+    }
 
     if (!upstream.ok) {
-      const message = data?.message || data?.detail || data?.error || "Login failed";
+      const message =
+        data?.message || data?.detail || data?.error || "Login failed";
       return NextResponse.json({ message }, { status: upstream.status });
     }
 
     const token =
-      data?.token || data?.access || data?.access_token || data?.jwt || data?.authentication_token;
+      data?.token ||
+      data?.access ||
+      data?.access_token ||
+      data?.jwt ||
+      data?.authentication_token;
 
     if (!token) {
-      return NextResponse.json({ message: "no token in upstream login response" }, { status: 500 });
+      return NextResponse.json(
+        { message: "no token in upstream login response" },
+        { status: 500 }
+      );
     }
 
     // ✅ ست‌کردن کوکی روی پاسخِ Next
-    const res = NextResponse.json({ ok: true });
+    const res = NextResponse.json({
+      ok: true,
+      token, // 👈 این مهمه؛ برای localStorage
+    });
+
     res.cookies.set("auth_token", token, {
       httpOnly: true,
       sameSite: "lax",
@@ -42,6 +62,7 @@ export async function POST(req) {
       path: "/",
       maxAge: 60 * 60 * 24 * 7, // 7 days
     });
+
     return res;
   } catch (err) {
     console.error("[password-login] proxy crash:", err);

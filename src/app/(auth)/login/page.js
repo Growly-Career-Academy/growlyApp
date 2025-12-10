@@ -16,8 +16,9 @@ export default function AuthPage() {
     e.preventDefault();
     setErr("");
 
-    const normalized = (phone || "").replace(/\D/g, "");
-    if (!normalized) {
+    // ✅ شماره تمیز شده
+    const normalizedPhone = (phone || "").replace(/\D/g, "");
+    if (!normalizedPhone) {
       setErr("شماره موبایل را وارد کن");
       return;
     }
@@ -29,14 +30,12 @@ export default function AuthPage() {
       const checkRes = await fetch("/api/auth/check-phone", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ phone: normalized }),
+        body: JSON.stringify({ phone: normalizedPhone }),
       });
 
       const checkData = await checkRes.json().catch(() => ({}));
       if (!checkRes.ok) {
-        throw new Error(
-          checkData?.message || "خطا در بررسی شماره"
-        );
+        throw new Error(checkData?.message || "خطا در بررسی شماره");
       }
 
       console.log("[check-phone response]", checkData);
@@ -44,36 +43,31 @@ export default function AuthPage() {
       const registered = checkData.registered === true;
       const hasPassword = checkData.has_password === true;
 
+      // ✅ شماره را در localStorage نگه دار (برای login/password و OTP)
+      if (typeof window !== "undefined") {
+        localStorage.setItem("phone", normalizedPhone);
+      }
+
       // حالت: کاربر قبلاً ثبت شده و پسورد هم داره → صفحه ورود با پسورد
       if (registered && hasPassword) {
-        localStorage.setItem("phone", normalized);
-        router.push(
-          `/login/password`
-        );
+        router.push("/login/password");
         return;
       }
 
-      // حالت‌های دیگه:
-      // - کاربر ثبت‌شده ولی پسورد نداره (registered && !hasPassword)
-      // - یا اصلاً ثبت نشده (registered === false)
-      // تو هر دو حالت باید OTP بگیریم برای ادامه ثبت نام / ست پسورد
-
+      // حالت‌های دیگر: باید OTP ارسال شود
       const otpRes = await fetch("/api/auth/otp/request", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ phone: normalized }),
+        body: JSON.stringify({ phone: normalizedPhone }),
       });
 
       const otpData = await otpRes.json().catch(() => ({}));
       if (!otpRes.ok) {
-        throw new Error(
-          otpData?.message || "خطا در ارسال کد تایید"
-        );
+        throw new Error(otpData?.message || "خطا در ارسال کد تایید");
       }
 
-      router.push(
-        `/signup/OTP?phone=${encodeURIComponent(normalized)}&flow=signup`
-      );
+      // ✅ فقط flow در URL، شماره از localStorage خوانده می‌شود
+      router.push(`/signup/OTP?flow=signup`);
     } catch (e) {
       console.error("[login first step error]", e);
       setErr(e.message || "خطای ناشناخته");

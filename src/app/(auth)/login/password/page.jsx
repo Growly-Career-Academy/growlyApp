@@ -33,47 +33,32 @@ function LoginPasswordContent() {
   async function handleSubmit(e) {
     e.preventDefault();
     setErr("");
-  
+
     const normalizedPhone = phone.replace(/\D/g, "");
-  
+
     if (!normalizedPhone || !password) {
       setErr("شماره و رمز عبور را کامل وارد کن");
       return;
     }
-  
+
     try {
       setLoading(true);
-  
-      const url = `${process.env.NEXT_PUBLIC_API_BASE}/auth/password/login/`;
-  
-      // 👇 برای دیباگ: ببین چی داری می‌فرستی
-      console.log("LOGIN REQUEST =>", {
-        url,
-        body: { phone: normalizedPhone, password },
-      });
-  
-      const res = await fetch(url, {
+
+      // ✅ به روت داخلی خودمون می‌زنیم، نه مستقیم به بک
+      const res = await fetch("/api/auth/password-login", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          Accept: "application/json",
         },
         body: JSON.stringify({
           phone: normalizedPhone,
           password,
         }),
       });
-  
-      const text = await res.text();
-      console.log("LOGIN RESPONSE =>", res.status, text);
-  
-      let data = {};
-      try {
-        data = JSON.parse(text);
-      } catch (e) {}
-  
+
+      const data = await res.json().catch(() => ({}));
+
       if (!res.ok) {
-        // 👇 متن دقیق خطا از بک
         throw new Error(
           data?.message ||
             data?.detail ||
@@ -81,11 +66,19 @@ function LoginPasswordContent() {
             "ورود ناموفق بود"
         );
       }
-  
+
+      // توکن برای درخواست‌های کلاینتی مثل /selections
       if (data?.token) {
-        localStorage.setItem("authToken", data.token);
+        try {
+          localStorage.setItem("authToken", data.token);
+        } catch {}
       }
-  
+
+      // شماره را هم نگه می‌داریم برای OTP و نمایش
+      try {
+        localStorage.setItem("phone", normalizedPhone);
+      } catch {}
+
       router.push("/Domain");
     } catch (e) {
       console.error("LOGIN ERROR:", e);
@@ -94,6 +87,7 @@ function LoginPasswordContent() {
       setLoading(false);
     }
   }
+
   
 
   // --- ۲) فراموشی رمز عبور ---
@@ -101,18 +95,23 @@ function LoginPasswordContent() {
   // بعد کاربر رو می‌فرسته به صفحه‌ی OTP مخصوص فراموشی رمز
   async function handleForgot() {
     setErr("");
-
+  
     const normalizedPhone = phone.replace(/\D/g, "");
     if (!normalizedPhone) {
       setErr("اول شماره موبایل رو وارد کن");
       return;
     }
-
+  
+    // 👈 ذخیره در localStorage
+    try {
+      if (typeof window !== "undefined") {
+        localStorage.setItem("phone", normalizedPhone);
+      }
+    } catch {}
+  
     try {
       setForgotLoading(true);
-
-      // مستقیم می‌زنیم به بک‌اند خارجی (نه route داخلی)
-      // چون این فقط OTP می‌فرسته و هنوز توکنی لازم نیست.
+  
       const res = await fetch(
         `${process.env.NEXT_PUBLIC_API_BASE}/auth/password/forgot/`,
         {
@@ -121,12 +120,10 @@ function LoginPasswordContent() {
             "Content-Type": "application/json",
             Accept: "application/json",
           },
-          body: JSON.stringify({
-            phone: normalizedPhone,
-          }),
+          body: JSON.stringify({ phone: normalizedPhone }),
         }
       );
-
+  
       if (!res.ok) {
         const text = await res.text();
         console.error("forgot failed", text);
@@ -134,21 +131,18 @@ function LoginPasswordContent() {
         setForgotLoading(false);
         return;
       }
-
-      // موفق بود → بفرستش صفحه OTP
+  
       setForgotLoading(false);
-
-      router.push(
-        `/forgot-password/otp?phone=${encodeURIComponent(
-          normalizedPhone
-        )}`
-      );
+  
+      // 👈 دیگه phone رو تو URL نمی‌فرستیم
+      router.push("/forgot-password/OTP");
     } catch (err) {
       console.error("network error (forgot):", err);
       setErr("خطای شبکه در ارسال کد تایید");
       setForgotLoading(false);
     }
   }
+  
 
   return (
     <div className="h-screen bg-white flex flex-col items-center justify-center px-6 py-6 overflow-hidden">

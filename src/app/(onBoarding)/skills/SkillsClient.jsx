@@ -80,10 +80,8 @@ export default function SkillsClient({ groups = [] }) {
     // حداقل ۳ مهارت
     if (!canContinue) return;
   
-    // مهارت‌های انتخاب شده
     const skillsArray = Array.from(selected);
   
-    // توکن لاگین
     const token =
       typeof window !== "undefined" ? localStorage.getItem("authToken") : null;
   
@@ -92,7 +90,6 @@ export default function SkillsClient({ groups = [] }) {
       return;
     }
   
-    // domainId و professionId را قبلاً در useEffect از localStorage خواندی
     if (!domainId || !professionId) {
       setErr(
         "اطلاعات حوزه یا تخصص پیدا نشد. لطفاً مراحل قبلی را دوباره انجام بده."
@@ -100,7 +97,6 @@ export default function SkillsClient({ groups = [] }) {
       return;
     }
   
-    // 👈 دقیقا مطابق چیزی که تو Swagger جواب داد
     const payload = {
       domain_id: domainId,
       profession_id: professionId,
@@ -119,7 +115,7 @@ export default function SkillsClient({ groups = [] }) {
           headers: {
             "Content-Type": "application/json",
             Accept: "application/json",
-            Authorization: `Token ${token}`, // اگر تو Swagger Bearer بود، این را بکن Bearer
+            Authorization: `Token ${token}`,
           },
           body: JSON.stringify(payload),
         }
@@ -133,10 +129,11 @@ export default function SkillsClient({ groups = [] }) {
         return;
       }
   
-      // اینجا یعنی 201 شده
+      // ✅ اینجا یعنی 201 شده و همه‌چیز اوکیه
       console.log("SELECTION SAVED:", text);
-      // مثلاً:
-      // router.push("/dashboard");
+  
+      // 👇 حالا ببرش به صفحه رودمپ
+      router.push("/RoadMap");   // یا /RoadMap اگر فولدرت این‌طوریه
     } catch (e) {
       console.error("network error (save selection):", e);
       setErr("خطا در ارتباط با سرور. لطفاً بعداً دوباره تلاش کن.");
@@ -145,7 +142,6 @@ export default function SkillsClient({ groups = [] }) {
     }
   };
   
-
   return (
     <div className="flex flex-col flex-1 min-h-0">
       {/* لیست اسکرول‌دار */}
