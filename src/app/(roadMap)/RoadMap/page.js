@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import Lottie from "lottie-react";
 import toasterAnimation from "@/assets/lottie/Toaster.json";
+import GradientMessageBubble from "@/components/GradientMessageBubble";
 // import fetch from "@/functions/fetch";
 
 function RoadMap() {
@@ -119,29 +120,50 @@ function RoadMap() {
       dir="rtl"
     >
       <div className="flex flex-col flex-1 max-w-sm w-full mx-auto min-h-0 px-5 pt-25">
-        <div className="p-[1px] rounded-2xl bg-gradient-to-br from-[#0B834F] to-[#FFCC29]">
-          <div className="relative bg-white rounded-2xl p-6">
+        {/* <div className="p-[1px] rounded-2xl bg-gradient-to-b from-[#0B834F] to-[#FFCC29]">
+          <div className="relative bg-white rounded-2xl px-7 py-10">
             <div className="flex flex-row items-center gap-2">
-              <img src="/course-code.png" alt="hint" width={32} className="mb-2" />
+              <img src="/code.svg" alt="hint" width={32}/>
               <h1 className="text-xl font-bold leading-[1.4]">
                 مسیر یادگیری برنامه‌نویسی وب
               </h1>
             </div>
-            <p className="text-xs text-[#595959] leading-[20px] mt-4">
+            <p className="text-xs text-[#595959] leading-[20px] mt-4 text-justify">
               این مسیر یادگیری برای تو شخصی‌سازی شده و بهت کمک می‌کنه از پایه شروع کنی و قدم‌به‌قدم تا حرفه‌ای شدن پیش بری. همیشه شروع سخته، اما اگه همین الان دوره اول رو تهیه کنی و فقط 2 دقیقه‌اش رو ببینی، ادامه مسیر برات هموار می‌شه!
-              </p>
-              <div className="flex flex-row items-center gap-2 mt-4">
-              <img src="/teach.svg" alt="teaching" width={18} className="mb-2" />
+            </p>
+            <div className="flex flex-row items-center gap-2 mt-4">
+              <img src="/teach.svg" alt="teaching" width={18}/>
               <p className="text-sm font-medium leading-[1.4] text-[#595959]">
-              10 گام آموزشی
+                10 گام آموزشی
               </p>
             </div>
+            <div className="absolute -bottom-[8px] left-1/2 -translate-x-1/2 border-b border-r bg-white border-[#FFCC29] w-4 h-4 rotate-45">
+            </div>
           </div>
-
+        </div> */}
+        <GradientMessageBubble>
+        <div className="flex flex-row items-center gap-2">
+          <img src="/code.svg" alt="hint" width={32} />
+          <h1 className="text-xl font-bold leading-[1.4] text-black">
+            مسیر یادگیری برنامه‌نویسی وب
+          </h1>
         </div>
+        <p className="text-xs text-[#595959] leading-[20px] mt-4 text-justify">
+          این مسیر یادگیری برای تو شخصی‌سازی شده و بهت کمک می‌کنه از پایه شروع کنی
+          و قدم‌به‌قدم تا حرفه‌ای شدن پیش بری. همیشه شروع سخته، اما اگه همین الان
+          دوره اول رو تهیه کنی و فقط 2 دقیقه‌اش رو ببینی، ادامه مسیر برات هموار
+          می‌شه!
+        </p>
+        <div className="flex flex-row items-center gap-2 mt-4">
+          <img src="/teach.svg" alt="teaching" width={18} />
+          <p className="text-sm font-medium leading-[1.4] text-[#595959]">
+            10 گام آموزشی
+          </p>
+        </div>
+        </GradientMessageBubble>
       </div>
     </div>
-  </>;
+  </>
 }
 
 export default RoadMap;
