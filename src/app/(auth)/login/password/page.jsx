@@ -79,7 +79,7 @@ function LoginPasswordContent() {
         localStorage.setItem("phone", normalizedPhone);
       } catch {}
 
-      router.push("/Domain");
+      router.push("/onboarding/domain");
     } catch (e) {
       console.error("LOGIN ERROR:", e);
       setErr(e.message || "خطای ناشناخته");

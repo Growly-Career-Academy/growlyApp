@@ -26,9 +26,6 @@
     --foreground: #ededed;
   }
 } */
-html {
-  overflow: hidden; /* Prevent horizontal scroll */
-}
 
 body {
   background: var(--background);
@@ -64,6 +61,15 @@ input, textarea {
   overflow: hidden;
 }
 
+.bg-step1 {
+  background-image: url('/step1.png');
+}
+.bg-step-even {
+  background-image: url('/even-steps.png');
+}
+.bg-step-odd {
+  background-image: url('/odd-steps.png');
+}
 /* Mobile optimizations */
 @media (max-width: 768px) {
   body {

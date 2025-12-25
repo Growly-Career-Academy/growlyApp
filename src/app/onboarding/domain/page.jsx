@@ -56,7 +56,9 @@ const extractIcon = (item) => {
 
 export default async function DomainPage() {
   const base = process.env.NEXT_PUBLIC_API_BASE; // مثلا https://api.growly.ir/api/v1
-  const token = cookies().get("auth_token")?.value;
+
+  const cookieStore = await cookies();   // 👈 حتماً await
+  const token = cookieStore.get("auth_token")?.value;
 
   let domains = [];
   let fetchErr = "";

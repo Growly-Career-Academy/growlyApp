@@ -16,26 +16,32 @@ export default function DomainClient({ domains = [], fetchErr = "" }) {
   };
 
   const handleSubmit = async () => {
-    if (!selected) return;
+    if (!selected || !selected.slug) {
+      setErr("لطفاً یک دامنه را انتخاب کنید.");
+      return; // جلوگیری از ارسال درخواست بی‌معنی
+    }
   
     setSubmitting(true);
     try {
+      // ذخیره کردن انتخاب در localStorage
       if (typeof window !== "undefined") {
         localStorage.setItem(
           "selectedDomain",
           JSON.stringify({
-            id: selected.id,        // 👈 عدد واقعی که از API دامین می‌آد
+            id: selected.id,        // عدد واقعی که از API دامین می‌آد
             slug: selected.slug,    // فقط برای URL
             title: selected.title,
           })
         );
       }
   
-      router.push(`/Profession?domain=${encodeURIComponent(selected.slug)}`);
+      // ارسال به صفحه‌ی بعد با استفاده از slug انتخاب شده
+      router.push(`/onboarding/profession?domain=${encodeURIComponent(selected.slug)}`);
     } finally {
       setSubmitting(false);
     }
   };
+  
   
 
 

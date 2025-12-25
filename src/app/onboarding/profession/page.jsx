@@ -9,7 +9,9 @@ export const metadata = { title: "Profession | Growly" };
 export default async function ProfessionPage({ searchParams }) {
   const domainSlug = searchParams?.domain || "";
   const base = process.env.NEXT_PUBLIC_API_BASE;
-  const token = cookies().get("auth_token")?.value;
+  const cookieStore = await cookies();
+  const token = cookieStore.get("auth_token")?.value;
+  console.log("token:" + token);
 
   let professions = [];
   let fetchErr = "";
