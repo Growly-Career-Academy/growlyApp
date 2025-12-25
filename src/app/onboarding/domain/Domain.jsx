@@ -11,39 +11,41 @@ export default function DomainClient({ domains = [], fetchErr = "" }) {
   const [selected, setSelected] = useState(null);
   const [submitting, setSubmitting] = useState(false);
 
+  // ✅ اضافه شد
+  const [err, setErr] = useState("");
+
   const toggleSelect = (Domain) => {
-    setSelected((prev) => (prev?.slug === Domain.slug ? null : Domain)); // انتخاب مجدد = لغو
+    setErr(""); // ✅ پاک شدن خطا وقتی انتخاب عوض میشه
+    setSelected((prev) => (prev?.slug === Domain.slug ? null : Domain));
   };
 
   const handleSubmit = async () => {
-    if (!selected || !selected.slug) {
-      setErr("لطفاً یک دامنه را انتخاب کنید.");
-      return; // جلوگیری از ارسال درخواست بی‌معنی
+    const slug = (selected?.slug || "").trim();
+
+    // ✅ این گارد قبلاً بود ولی setErr نداشت
+    if (!slug) {
+      setErr("لطفاً یک دامنه معتبر را انتخاب کنید.");
+      return;
     }
-  
+
     setSubmitting(true);
     try {
-      // ذخیره کردن انتخاب در localStorage
       if (typeof window !== "undefined") {
         localStorage.setItem(
           "selectedDomain",
           JSON.stringify({
-            id: selected.id,        // عدد واقعی که از API دامین می‌آد
-            slug: selected.slug,    // فقط برای URL
+            id: selected.id,
+            slug: slug,
             title: selected.title,
           })
         );
       }
-  
-      // ارسال به صفحه‌ی بعد با استفاده از slug انتخاب شده
-      router.push(`/onboarding/profession?domain=${encodeURIComponent(selected.slug)}`);
+
+      router.push(`/onboarding/profession?domain=${encodeURIComponent(slug)}`);
     } finally {
       setSubmitting(false);
     }
   };
-  
-  
-
 
   return (
     <div className="flex flex-col flex-1 min-h-0">
@@ -59,13 +61,13 @@ export default function DomainClient({ domains = [], fetchErr = "" }) {
         <div className="flex-1 overflow-y-auto scrollbar-none">
           <div className="grid grid-cols-2 gap-3 pb-3">
             {domains.map((f) => {
-              const iconSrc = f.icon || "/DomainIcons/default.png"; // 👈 اگر null بود، fallback نمایش داده میشه
+              const iconSrc = f.icon || "/DomainIcons/default.png";
               const shouldUnoptimize =
                 typeof f.icon === "string" && /^https?:\/\//i.test(f.icon);
 
               return (
                 <SelectableCard
-                  key={f.slug}
+                  key={f.slug || f.id} // ✅ ایمن‌تر
                   checked={selected?.slug === f.slug}
                   onChange={() => toggleSelect(f)}
                 >
@@ -97,22 +99,21 @@ export default function DomainClient({ domains = [], fetchErr = "" }) {
         </div>
       )}
 
-      {/* فوتر استیکی */}
       <div className="shrink-0 -mx-10">
         <div className="rounded-t-[28px] bg-white shadow-[0_-10px_40px_rgba(0,0,0,0.08)] px-10 pt-5 pb-20">
+          {/* ✅ نمایش خطا */}
+          {err && (
+            <p className="text-red-600 text-xs text-center mb-3">{err}</p>
+          )}
+
           <Button
             onClick={handleSubmit}
-            disabled={submitting || !selected}
+            disabled={submitting || !selected?.slug} // ✅ مهم
             className="w-full rounded-[28px] text-[18px] font-semibold"
           >
             <span className="inline-flex text-xl font-medium items-center justify-center gap-3">
               <span>{submitting ? "در حال ذخیره..." : "ادامه"}</span>
-              <Image
-                src="/ArrowUp.svg"
-                alt="ادامه"
-                width={13.55}
-                height={16.5}
-              />
+              <Image src="/ArrowUp.svg" alt="ادامه" width={13.55} height={16.5} />
             </span>
           </Button>
         </div>

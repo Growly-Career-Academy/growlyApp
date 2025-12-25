@@ -19,19 +19,21 @@ export async function GET(_req, { params }) {
       );
     }
 
-    // ⬅️ توکن را از کوکی بخوان و با scheme درست بفرست
+    // ✅ توکن را از کوکی بخوان
     const cookieStore = await cookies();
-const list = cookieStore.getAll().map(...)
+    const token = cookieStore.get("auth_token")?.value;
 
-
-    const upstream = await fetch(`${base.replace(/\/$/, "")}/domains/${slug}/professions/`, {
-      method: "GET",
-      headers: {
-        Accept: "application/json",
-        ...(token ? { Authorization: `Token ${token}` } : {}), // DRF TokenAuthentication
-      },
-      cache: "no-store",
-    });
+    const upstream = await fetch(
+      `${base.replace(/\/$/, "")}/domains/${encodeURIComponent(slug)}/professions/`,
+      {
+        method: "GET",
+        headers: {
+          Accept: "application/json",
+          ...(token ? { Authorization: `Token ${token}` } : {}), // DRF TokenAuthentication
+        },
+        cache: "no-store",
+      }
+    );
 
     const text = await upstream.text().catch(() => "");
     if (!upstream.ok) {
@@ -46,7 +48,9 @@ const list = cookieStore.getAll().map(...)
     }
 
     let data = [];
-    try { data = JSON.parse(text); } catch {}
+    try {
+      data = JSON.parse(text);
+    } catch {}
 
     // نرمال‌سازی برای UI
     const normalized = Array.isArray(data)

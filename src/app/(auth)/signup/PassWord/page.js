@@ -1,22 +1,16 @@
 "use client";
 
 import { useRouter, useSearchParams } from "next/navigation";
-import { useState, useMemo, Suspense } from "react";
+import { useEffect, useMemo, useState, Suspense } from "react";
 import Button from "@/components/Button";
 import PassInput from "@/components/inputs/PassInput";
 import NumInput from "@/components/inputs/NumInput";
-
-// Force dynamic rendering to avoid build errors with useSearchParams
-export const dynamic = 'force-dynamic';
 
 function SignupPasswordContent() {
   const router = useRouter();
   const search = useSearchParams();
 
-  const initialPhone = useMemo(
-    () => search.get("phone") || "",
-    [search]
-  );
+  const initialPhone = useMemo(() => search.get("phone") || "", [search]);
 
   const [phone, setPhone] = useState(initialPhone);
   const [password, setPassword] = useState("");
@@ -24,11 +18,21 @@ function SignupPasswordContent() {
   const [loading, setLoading] = useState(false);
   const [err, setErr] = useState("");
 
+  // اگر phone تو URL نبود، از localStorage پرش کن (برای وقتی از OTP میای)
+  useEffect(() => {
+    if (phone) return;
+    try {
+      const saved = localStorage.getItem("phone");
+      if (saved) setPhone(saved);
+    } catch {}
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   async function handleSubmit(e) {
     e.preventDefault();
     setErr("");
 
-    const normalizedPhone = phone.replace(/\D/g, "");
+    const normalizedPhone = (phone || "").replace(/\D/g, "");
     if (!normalizedPhone || !password) {
       setErr("شماره و رمز عبور را کامل وارد کن");
       return;
@@ -40,30 +44,37 @@ function SignupPasswordContent() {
       const res = await fetch("/api/auth/password-register", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          phone: normalizedPhone,
-          password,
-        }),
+        body: JSON.stringify({ phone: normalizedPhone, password }),
       });
 
       const data = await res.json().catch(() => ({}));
 
       if (!res.ok) {
-        throw new Error(
-          data?.message ||
-            data?.detail ||
-            data?.error ||
-            "ثبت رمز عبور ناموفق بود"
-        );
+        const msg =
+          data?.message || data?.detail || data?.error || "ثبت رمز عبور ناموفق بود";
+
+        // ✅ نکته اصلی: اگر بک گفت از قبل پسورد دارد، یعنی باید بره فلو لاگین
+        if (String(msg).toLowerCase().includes("already has password")) {
+          // برای UX بهتر: replace تا کاربر با Back دوباره برنگرده همینجا
+          router.replace(
+            `/login/password?phone=${encodeURIComponent(normalizedPhone)}`
+          );
+          return;
+        }
+
+        setErr(msg);
+        return;
       }
 
-      // موفقیت:
-      // - یوزر ایجاد شد
-      // - اگر بک‌اند توکن داده باشه، route ما کوکی auth_token رو ست کرده
-      // حالا بفرستش به Domain
-      router.push("/Domain");
+      // شماره رو ذخیره کن که تو صفحات بعدی لازم میشه
+      try {
+        localStorage.setItem("phone", normalizedPhone);
+      } catch {}
+
+      // ✅ مسیر درست پروژه جدیدت
+      router.push("/onboarding/domain");
     } catch (e) {
-      setErr(e.message || "خطای ناشناخته");
+      setErr(e?.message || "خطای ناشناخته");
     } finally {
       setLoading(false);
     }
@@ -79,13 +90,10 @@ function SignupPasswordContent() {
         </div>
 
         <form className="w-full flex flex-col gap-4" onSubmit={handleSubmit}>
-          {/* شماره موبایل نمایش داده می‌شه و قابل ادیت هم هست */}
           <NumInput
             value={phone}
-            onChange={(e) =>
-              setPhone(e.target.value.replace(/\D/g, ""))
-            }
-            onEdit={() => router.push("/login")} // یا هرجایی که باید برگرده
+            onChange={(e) => setPhone(e.target.value.replace(/\D/g, ""))}
+            onEdit={() => router.push("/login")}
           />
 
           <PassInput
@@ -94,7 +102,6 @@ function SignupPasswordContent() {
             placeholder="Password"
           />
 
-          {/* زیرش همون bullet point های دیزاین تو */}
           <div className="space-y-2 mr-2">
             <div className="flex items-center gap-2 text-xs text-foreground">
               <div className="w-1 h-1 bg-gray-600 rounded-full"></div>
@@ -110,9 +117,7 @@ function SignupPasswordContent() {
             </div>
           </div>
 
-          {err && (
-            <p className="text-red-600 text-xs text-center">{err}</p>
-          )}
+          {err && <p className="text-red-600 text-xs text-center">{err}</p>}
 
           <Button type="submit" disabled={loading}>
             {loading ? "در حال ثبت..." : "ورود"}
@@ -125,18 +130,20 @@ function SignupPasswordContent() {
 
 export default function SignupPasswordPage() {
   return (
-    <Suspense fallback={
-      <div className="h-screen bg-white flex flex-col items-center justify-center px-6 py-6 overflow-hidden">
-        <div className="flex flex-col items-center justify-center flex-1 max-w-sm w-full">
-          <div className="text-center mb-8">
-            <h1 className="text-xl font-bold text-gray-800 mb-2">
-              رمز عبور خودت رو انتخاب کن
-            </h1>
+    <Suspense
+      fallback={
+        <div className="h-screen bg-white flex flex-col items-center justify-center px-6 py-6 overflow-hidden">
+          <div className="flex flex-col items-center justify-center flex-1 max-w-sm w-full">
+            <div className="text-center mb-8">
+              <h1 className="text-xl font-bold text-gray-800 mb-2">
+                رمز عبور خودت رو انتخاب کن
+              </h1>
+            </div>
+            <div className="w-full">در حال بارگذاری...</div>
           </div>
-          <div className="w-full">در حال بارگذاری...</div>
         </div>
-      </div>
-    }>
+      }
+    >
       <SignupPasswordContent />
     </Suspense>
   );

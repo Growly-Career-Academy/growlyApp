@@ -62,7 +62,7 @@ export default function ProfessionClient({
         );
       }
 
-      router.push(`/skills?profession=${encodeURIComponent(selectedId)}`);
+      router.push(`/onboarding//skills?profession=${encodeURIComponent(selectedId)}`);
     } finally {
       setSubmitting(false);
     }

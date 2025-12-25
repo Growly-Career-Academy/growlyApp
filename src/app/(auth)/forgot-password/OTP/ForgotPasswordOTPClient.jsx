@@ -1,13 +1,13 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import Button from "@/components/Button";
 
 export default function ForgotPasswordOTPClient() {
   const router = useRouter();
+  const search = useSearchParams();
 
-  // شماره موبایل از localStorage
   const [phone, setPhone] = useState("");
   const normalizedPhone = (phone || "").replace(/\D/g, "");
 
@@ -18,27 +18,28 @@ export default function ForgotPasswordOTPClient() {
   const [cooldown, setCooldown] = useState(0);
   const inputsRef = useRef([]);
 
-  // خواندن شماره از localStorage
+  // ✅ اولویت با query، بعد localStorage
   useEffect(() => {
+    const qp = (search.get("phone") || "").replace(/\D/g, "");
+    if (qp) {
+      setPhone(qp);
+      try {
+        localStorage.setItem("phone", qp);
+      } catch {}
+      return;
+    }
+
     try {
       const stored = localStorage.getItem("phone");
-      if (stored) {
-        setPhone(stored);
-      }
+      if (stored) setPhone(stored);
     } catch {}
-  }, []);
+  }, [search]);
 
-  // شروع cooldown اولیه (برای کدی که صفحه قبل فرستاده)
-  useEffect(() => {
-    setCooldown(120); // ۲ دقیقه
-  }, []);
+  useEffect(() => setCooldown(120), []);
 
-  // تایمر برای کم شدن countdown
   useEffect(() => {
     if (cooldown <= 0) return;
-    const id = setInterval(() => {
-      setCooldown((prev) => (prev > 0 ? prev - 1 : 0));
-    }, 1000);
+    const id = setInterval(() => setCooldown((p) => (p > 0 ? p - 1 : 0)), 1000);
     return () => clearInterval(id);
   }, [cooldown]);
 
@@ -49,9 +50,7 @@ export default function ForgotPasswordOTPClient() {
       next[i] = v;
       return next;
     });
-    if (v && i < 5) {
-      inputsRef.current[i + 1]?.focus();
-    }
+    if (v && i < 5) inputsRef.current[i + 1]?.focus();
   }
 
   function handleKeyDown(i, e) {
@@ -94,9 +93,7 @@ export default function ForgotPasswordOTPClient() {
     setLoading(true);
     try {
       router.push(
-        `/forgot-password?phone=${encodeURIComponent(
-          normalizedPhone
-        )}&code=${encodeURIComponent(code)}`
+        `/forgot-password?phone=${encodeURIComponent(normalizedPhone)}&code=${encodeURIComponent(code)}`
       );
     } catch (err) {
       console.error("[Forgot OTP] submit error:", err);
@@ -120,21 +117,13 @@ export default function ForgotPasswordOTPClient() {
         body: JSON.stringify({ phone: normalizedPhone }),
       });
 
-      const text = await res.text();
+      const data = await res.json().catch(() => ({}));
 
       if (!res.ok) {
-        console.error("[Forgot OTP] resend failed:", text);
-        if (res.status === 429) {
-          setErrorMsg(
-            "به دلیل درخواست‌های متعدد، تا حدود ۳۰ دقیقه امکان ارسال مجدد کد وجود ندارد."
-          );
-        } else {
-          setErrorMsg("ارسال مجدد کد ناموفق بود");
-        }
+        setErrorMsg(data?.message || data?.detail || "ارسال مجدد کد ناموفق بود");
         return;
       }
 
-      setErrorMsg("");
       setCooldown(120);
     } catch (err) {
       console.error("[Forgot OTP] resend network error:", err);
@@ -160,11 +149,7 @@ export default function ForgotPasswordOTPClient() {
         </p>
 
         <form onSubmit={handleSubmit} className="space-y-6">
-          <div
-            className="flex justify-center gap-2"
-            dir="ltr"
-            onPaste={handlePaste}
-          >
+          <div className="flex justify-center gap-2" dir="ltr" onPaste={handlePaste}>
             {digits.map((d, i) => (
               <input
                 key={i}
@@ -183,9 +168,7 @@ export default function ForgotPasswordOTPClient() {
             ))}
           </div>
 
-          {errorMsg && (
-            <p className="text-red-600 text-xs text-center">{errorMsg}</p>
-          )}
+          {errorMsg && <p className="text-red-600 text-xs text-center">{errorMsg}</p>}
 
           <Button type="submit" disabled={loading}>
             {loading ? "در حال بررسی..." : "تایید"}

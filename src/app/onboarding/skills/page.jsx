@@ -9,7 +9,9 @@ export const metadata = { title: "Skills | Growly" };
 export default async function SkillsPage({ searchParams }) {
   const professionSlug = searchParams?.profession || "";
   const baseApp = process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000";
-  const cookieHeader = headers().get("cookie") ?? "";
+  const h = await headers();
+const cookieHeader = h.get("cookie") ?? "";
+
 
   let groups = [];
 

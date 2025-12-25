@@ -40,8 +40,11 @@ export default function AuthPage() {
 
       console.log("[check-phone response]", checkData);
 
-      const registered = checkData.registered === true;
-      const hasPassword = checkData.has_password === true;
+      const toBool = (v) => v === true || v === 1 || v === "1" || v === "true";
+
+      const registered = toBool(checkData.registered);
+      const hasPassword = toBool(checkData.has_password);
+
 
       // ✅ شماره را در localStorage نگه دار (برای login/password و OTP)
       if (typeof window !== "undefined") {

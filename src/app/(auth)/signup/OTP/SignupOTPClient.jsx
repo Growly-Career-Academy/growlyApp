@@ -4,6 +4,8 @@ import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import Button from "@/components/Button";
 
+const toBool = (v) => v === true || v === 1 || v === "1" || v === "true";
+
 export default function SignupOTPClient({ flow = "signup" }) {
   const router = useRouter();
 
@@ -15,7 +17,7 @@ export default function SignupOTPClient({ flow = "signup" }) {
   const [err, setErr] = useState(""); // پیام خطا
   const inputsRef = useRef([]);
 
-  // 👇 شماره را از localStorage بگیر
+  // شماره از localStorage
   const [phone, setPhone] = useState("");
   useEffect(() => {
     try {
@@ -26,7 +28,9 @@ export default function SignupOTPClient({ flow = "signup" }) {
 
   const normalizedPhone = (phone || "").replace(/\D/g, "");
   const code = vals.join("");
-  const canSubmit = code.length === LENGTH && !loadingVerify;
+
+  // ✅ تغییر کوچک: شماره هم باید موجود باشد
+  const canSubmit = normalizedPhone.length > 0 && code.length === LENGTH && !loadingVerify;
 
   // تایمر شمارش معکوس
   useEffect(() => {
@@ -37,7 +41,7 @@ export default function SignupOTPClient({ flow = "signup" }) {
 
   // پر کردن هر خونه OTP
   const setAt = (i, v) => {
-    const digit = v.replace(/\D/g, "").slice(0, 1);
+    const digit = String(v || "").replace(/\D/g, "").slice(0, 1);
     setVals((prev) => {
       const next = [...prev];
       next[i] = digit;
@@ -99,31 +103,43 @@ export default function SignupOTPClient({ flow = "signup" }) {
       if (!res.ok) {
         console.error("[SignupOTPClient] verify failed body:", data);
         throw new Error(
-          data?.message ||
-            data?.detail ||
-            data?.error ||
-            "کد تایید اشتباهه"
+          data?.message || data?.detail || data?.error || "کد تایید اشتباهه"
         );
       }
 
-      // لاجیک بعد از تایید کد:
-      // الان ما کاری که می‌خوایم انجام بدیم اینه:
-      // اگر flow === "forgot-password" بفرست به صفحه‌ای که پسورد جدید رو می‌گیره
-      // اگر flow === "signup" بفرست به صفحه ست کردن پسورد اولیه
-      //
-      // توجه: تو گفتی دیگه confirm password نداریم، پس مستقیم میریم همون صفحه انتخاب پسورد
-      //
+      // اگر فلو فراموشی رمز بود → مستقیم بفرست صفحه reset
       if (flow === "forgot-password") {
-        router.push(
-          `/forgot-password?phone=${encodeURIComponent(normalizedPhone)}`
-        );
-      } else {
-        router.push(
-          `/signup/PassWord?phone=${encodeURIComponent(normalizedPhone)}`
-        );
+        router.push(`/forgot-password?phone=${encodeURIComponent(normalizedPhone)}`);
+        return;
       }
+
+      // فلو signup → (این بخش رو حذف نکردیم، فقط تصمیم‌گیری رو تغییر دادیم)
+      const checkRes = await fetch("/api/auth/check-phone", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ phone: normalizedPhone }),
+      });
+
+      const checkData = await checkRes.json().catch(() => ({}));
+
+      if (!checkRes.ok) {
+        console.warn("[SignupOTPClient] check-phone failed:", checkData);
+      } else {
+        const registered = toBool(checkData.registered);
+        const hasPassword = toBool(checkData.has_password);
+        console.log("[SignupOTPClient] check-phone after verify:", {
+          registered,
+          hasPassword,
+          raw: checkData,
+        });
+      }
+
+      // ✅ تغییر اصلی:
+      // در فلو signup همیشه می‌ریم صفحه انتخاب پسورد.
+      // اگر بک گفت "already has password"، همون صفحه PassWord خودش کاربر رو می‌فرسته login.
+      router.push(`/signup/PassWord?phone=${encodeURIComponent(normalizedPhone)}`);
     } catch (e) {
-      setErr(e.message || "خطای تایید کد");
+      setErr(e?.message || "خطای تایید کد");
     } finally {
       setLoadingVerify(false);
     }
@@ -132,6 +148,7 @@ export default function SignupOTPClient({ flow = "signup" }) {
   // --- ارسال مجدد کد ---
   const handleResend = async () => {
     if (sec > 0 || loadingResend) return;
+
     setLoadingResend(true);
     setErr("");
 
@@ -143,20 +160,17 @@ export default function SignupOTPClient({ flow = "signup" }) {
       });
 
       const data = await res.json().catch(() => ({}));
+
       if (!res.ok) {
         console.error("[SignupOTPClient] resend failed:", data);
         throw new Error(
-          data?.message ||
-            data?.detail ||
-            data?.error ||
-            "ارسال مجدد ناموفق بود"
+          data?.message || data?.detail || data?.error || "ارسال مجدد ناموفق بود"
         );
       }
 
-      // شروع دوباره تایمر
       setSec(90);
     } catch (e) {
-      setErr(e.message || "خطا در ارسال مجدد");
+      setErr(e?.message || "خطا در ارسال مجدد");
     } finally {
       setLoadingResend(false);
     }
