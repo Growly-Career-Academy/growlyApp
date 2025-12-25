@@ -1,5 +1,4 @@
-import { cookies } from "next/headers";
-
+import { NextResponse } from "next/server";
 // POST /api/auth/otp/verify
 // body: { phone, code }
 // این روت:
@@ -52,46 +51,25 @@ export async function POST(req) {
       data?.jwt ||
       data?.authentication_token;
 
-    // این دقیقا همون نقطه‌ایه که باعث 401 تو /api/domains شده بود 👇
+    const res = NextResponse.json(
+      { ok: true, hasToken: !!token },
+      { status: 200 }
+    );
+
     if (token) {
       const isProd = process.env.NODE_ENV === "production";
-
-      cookies().set({
-        name: "auth_token",
-        value: token,
-
-        // با این فلگ httpOnly، جاوااسکریپت فرانت نمی‌تونه کوکی رو بخونه (امنیت)
+      res.cookies.set("auth_token", token, {
         httpOnly: true,
-
-        // همون رفتار قبلی: اجازه بده توی ناوبری‌های معمول ارسال بشه
         sameSite: "lax",
-
-        // تغییر اصلی:
-        // قبلاً همیشه true بود → روی localhost (http) مرورگر کوکی رو attach نمی‌کرد
-        // الان فقط روی پرود true می‌ذاریم
         secure: isProd,
-
-        // برای کل سایت معتبره
         path: "/",
-
-        // 7 روز
         maxAge: 60 * 60 * 24 * 7,
       });
     }
 
-    // جواب استاندارد خودمون برای فرانت
-    return Response.json(
-      {
-        ok: true,
-        hasToken: !!token, // برای دیباگ
-      },
-      { status: 200 }
-    );
+    return res;
   } catch (e) {
     console.error("[/api/auth/otp/verify] crashed:", e);
-    return Response.json(
-      { message: "server error" },
-      { status: 500 }
-    );
+    return NextResponse.json({ message: "server error" }, { status: 500 });
   }
 }

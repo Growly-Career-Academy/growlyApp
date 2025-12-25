@@ -20,7 +20,9 @@ export async function GET(_req, { params }) {
     }
 
     // ⬅️ توکن را از کوکی بخوان و با scheme درست بفرست
-    const token = cookies().get("auth_token")?.value;
+    const cookieStore = await cookies();
+const list = cookieStore.getAll().map(...)
+
 
     const upstream = await fetch(`${base.replace(/\/$/, "")}/domains/${slug}/professions/`, {
       method: "GET",

@@ -9,7 +9,9 @@ export async function GET() {
     const base = process.env.NEXT_PUBLIC_API_BASE; // مثلا https://api.growly.ir/api/v1
 
     // توکن رو از کوکی کاربر بخون
-    const token = cookies().get("auth_token")?.value;
+    const cookieStore = await cookies();
+const token = cookieStore.get("auth_token")?.value;
+
     console.log("[/api/domains] has token?", Boolean(token)); // فقط برای dev
     // هدرها رو بساز
     const headers = {

@@ -11,7 +11,9 @@ export async function GET(_req, { params }) {
     }
 
     const base = process.env.NEXT_PUBLIC_API_BASE;
-    const token = cookies().get("auth_token")?.value;
+    const cookieStore = await cookies();
+const token = cookieStore.get("auth_token")?.value;
+
 
     const upstream = await fetch(`${base}/professions/${slug}/skills/`, {
       method: "GET",
